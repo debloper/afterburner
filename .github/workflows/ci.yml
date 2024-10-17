@@ -2,8 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
-  pull_request:
+    branches:
+      - 'main'
+      - 'master'
+    tags: 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,11 +24,12 @@ jobs:
       JETSON_BUILD_DIR: /tmp/jetson-builder/build
       JETSON_NANO_BOARD: ${{ matrix.board }}
       JETSON_NANO_REVISION: ${{ matrix.revision }}
+      BASE_IMAGE_VERSION: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Build docker image
         run: docker buildx build --platform linux/arm64 -t jetson-nano-image .
@@ -43,8 +47,7 @@ jobs:
           sudo -E ./create-image.sh
 
       - name: Upload image
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.board }}-r${{ matrix.revision }}
-          path: |
-            jetson.img
+          name: ${{ matrix.board }}-r${{ matrix.revision }}-${{ env.BASE_IMAGE_VERSION }}
+          path: jetson.img
